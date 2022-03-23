@@ -310,7 +310,7 @@ class BPServiceActor implements Runnable {
         // Below split threshold, send all reports in a single message.
         DatanodeCommand cmd = bpNamenode.blockReport(
             bpRegistration, bpos.getBlockPoolId(), reports,
-              new BlockReportContext(1, 0, reportId, fullBrLeaseId, true));
+              new BlockReportContext(1, 0, reportId, fullBrLeaseId));
         numRPCs = 1;
         numReportsSent = reports.length;
         if (cmd != null) {
@@ -323,7 +323,7 @@ class BPServiceActor implements Runnable {
           DatanodeCommand cmd = bpNamenode.blockReport(
               bpRegistration, bpos.getBlockPoolId(), singleReport,
               new BlockReportContext(reports.length, r, reportId,
-                  fullBrLeaseId, true));
+                  fullBrLeaseId));
           numReportsSent++;
           numRPCs++;
           if (cmd != null) {
@@ -387,6 +387,21 @@ class BPServiceActor implements Runnable {
       }
     }
     return cmd;
+  }
+
+  private int calculateBlockReportPBSize(
+    boolean useBlocksBuffer, StorageBlockReport[] reports) {
+    int reportSize = 0;
+
+    for (StorageBlockReport r : reports) {
+      if (useBlocksBuffer) {
+        reportSize += r.getBlocks().getBlocksBuffer().size();
+      } else {
+        // each block costs 10 bytes in PB because of uint64
+        reportSize += 10 * r.getBlocks().getBlockListAsLongs().length;
+      }
+    }
+    return reportSize;
   }
   
   HeartbeatResponse sendHeartBeat(boolean requestBlockReportLease)
@@ -605,11 +620,10 @@ class BPServiceActor implements Runnable {
    * The bpDatanode needs to register with the namenode on startup in order
    * 1) to report which storage it is serving now and 
    * 2) to receive a registrationID
-   *  
+   *
    * issued by the namenode to recognize registered datanodes.
-   * 
+   *
    * @param nsInfo current NamespaceInfo
-   * @see FSNamesystem#registerDatanode(DatanodeRegistration)
    * @throws IOException
    */
   void register(NamespaceInfo nsInfo) throws IOException {

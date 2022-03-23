@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.util;
 
+import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Random;
@@ -391,6 +392,11 @@ public class TestGSet {
       expected.clear();
       gset.clear();
       Assert.assertEquals(0, size());
+    }
+
+    @Override
+    public Collection<IntElement> values() {
+      return expected.values();
     }
   }
 

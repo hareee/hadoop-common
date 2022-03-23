@@ -36,6 +36,37 @@ import com.google.common.collect.Iterables;
  * the datanodes that store the block.
  */
 class BlocksMap {
+  public static class StorageIterator implements Iterator<DatanodeStorageInfo> {
+    private final BlockInfo blockInfo;
+    private int nextIdx = 0;
+
+    StorageIterator(BlockInfo blkInfo) {
+      this.blockInfo = blkInfo;
+    }
+
+    @Override
+    public boolean hasNext() {
+      if (blockInfo == null) {
+        return false;
+      }
+      while (nextIdx < blockInfo.getCapacity() &&
+        blockInfo.getDatanode(nextIdx) == null) {
+        // note that for striped blocks there may be null in the triplets
+        nextIdx++;
+      }
+      return nextIdx < blockInfo.getCapacity();
+    }
+
+    @Override
+    public DatanodeStorageInfo next() {
+      return blockInfo.getStorageInfo(nextIdx++);
+    }
+
+    @Override
+    public void remove()  {
+      throw new UnsupportedOperationException("Sorry. can't remove.");
+    }
+  }
 
   /** Constant {@link LightWeightGSet} capacity. */
   private final int capacity;
@@ -120,9 +151,7 @@ class BlocksMap {
    * returns {@link Iterable} of the storages the block belongs to.
    */
   Iterable<DatanodeStorageInfo> getStorages(Block b) {
-    BlockInfo block = blocks.get(b);
-    return block != null ? getStorages(block)
-           : Collections.<DatanodeStorageInfo>emptyList();
+    return getStorages(blocks.get(b));
   }
 
   /**
@@ -146,16 +175,11 @@ class BlocksMap {
    * returns {@link Iterable} of the storages the block belongs to.
    */
   Iterable<DatanodeStorageInfo> getStorages(final BlockInfo storedBlock) {
-    if (storedBlock == null) {
-      return Collections.emptyList();
-    } else {
-      return new Iterable<DatanodeStorageInfo>() {
-        @Override
-        public Iterator<DatanodeStorageInfo> iterator() {
-          return storedBlock.getStorageInfos();
-        }
-      };
-    }
+    return new Iterable<DatanodeStorageInfo>() {
+      public Iterator<DatanodeStorageInfo> iterator() {
+        return new StorageIterator(storedBlock);
+      }
+    };
   }
 
   /** counts number of containing nodes. Better than using iterator. */

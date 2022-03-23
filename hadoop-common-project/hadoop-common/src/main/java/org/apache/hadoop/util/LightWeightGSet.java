@@ -18,6 +18,8 @@
 package org.apache.hadoop.util;
 
 import java.io.PrintStream;
+import java.util.AbstractCollection;
+import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 
@@ -64,16 +66,20 @@ public class LightWeightGSet<K, E extends K> implements GSet<K, E> {
    * An internal array of entries, which are the rows of the hash table.
    * The size must be a power of two.
    */
-  private final LinkedElement[] entries;
+  protected LinkedElement[] entries;
   /** A mask for computing the array index from the hash value of an element. */
-  private final int hash_mask;
+  protected int hash_mask;
   /** The size of the set (not the entry array). */
-  private int size = 0;
+  protected int size = 0;
   /** Modification version for fail-fast.
    * @see ConcurrentModificationException
    */
   private int modification = 0;
 
+  private Collection<E> values;
+
+  protected LightWeightGSet() {
+  }
   /**
    * @param recommended_length Recommended size of the internal array.
    */
@@ -87,7 +93,7 @@ public class LightWeightGSet<K, E extends K> implements GSet<K, E> {
   }
 
   //compute actual length
-  private static int actualArrayLength(int recommended) {
+  protected static int actualArrayLength(int recommended) {
     if (recommended > MAX_ARRAY_LENGTH) {
       return MAX_ARRAY_LENGTH;
     } else if (recommended < MIN_ARRAY_LENGTH) {
@@ -103,7 +109,7 @@ public class LightWeightGSet<K, E extends K> implements GSet<K, E> {
     return size;
   }
 
-  private int getIndex(final K key) {
+  protected int getIndex(final K key) {
     return key.hashCode() & hash_mask;
   }
 
@@ -211,6 +217,38 @@ public class LightWeightGSet<K, E extends K> implements GSet<K, E> {
       throw new NullPointerException("key == null");
     }
     return remove(getIndex(key), key);
+  }
+
+  @Override
+  public Collection<E> values() {
+    if (values == null) {
+      values = new Values();
+    }
+    return values;
+  }
+
+  private final class Values extends AbstractCollection<E> {
+
+    @Override
+    public Iterator<E> iterator() {
+      return LightWeightGSet.this.iterator();
+    }
+
+    @Override
+    public int size() {
+      return size;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean contains(Object o) {
+      return LightWeightGSet.this.contains((K)o);
+    }
+
+    @Override
+    public void clear() {
+      LightWeightGSet.this.clear();
+    }
   }
 
   @Override

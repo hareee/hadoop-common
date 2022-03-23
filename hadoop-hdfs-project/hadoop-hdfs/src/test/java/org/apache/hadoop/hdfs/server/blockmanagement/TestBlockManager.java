@@ -825,7 +825,7 @@ public class TestBlockManager {
     assertEquals(0, ds.getBlockReportCount());
     bm.processReport(node, new DatanodeStorage(ds.getStorageID()),
         builder.build(),
-        new BlockReportContext(1, 0, System.nanoTime(), 0, true));
+        new BlockReportContext(1, 0, System.nanoTime(), 0));
     assertEquals(1, ds.getBlockReportCount());
 
     // verify the storage info is correct
@@ -864,7 +864,7 @@ public class TestBlockManager {
     assertEquals(0, ds.getBlockReportCount());
     bm.processReport(node, new DatanodeStorage(ds.getStorageID()),
         generateReport(blocks),
-        new BlockReportContext(1, 0, System.nanoTime(), 0, false)
+        new BlockReportContext(1, 0, System.nanoTime(), 0)
         );
     assertEquals(1, ds.getBlockReportCount());
     // verify the storage info is correct
@@ -875,7 +875,7 @@ public class TestBlockManager {
     // Send unsorted report
     bm.processReport(node, new DatanodeStorage(ds.getStorageID()),
         generateReport(blocks),
-        new BlockReportContext(1, 0, System.nanoTime(), 0, false));
+        new BlockReportContext(1, 0, System.nanoTime(), 0));
     assertEquals(2, ds.getBlockReportCount());
     // verify the storage info is correct
     for (BlockInfo block : blocks) {
@@ -886,7 +886,7 @@ public class TestBlockManager {
     Collections.sort(blocks);
     bm.processReport(node, new DatanodeStorage(ds.getStorageID()),
         generateReport(blocks),
-        new BlockReportContext(1, 0, System.nanoTime(), 0, true));
+        new BlockReportContext(1, 0, System.nanoTime(), 0));
     assertEquals(3, ds.getBlockReportCount());
     // verify the storage info is correct
     for (BlockInfo block : blocks) {

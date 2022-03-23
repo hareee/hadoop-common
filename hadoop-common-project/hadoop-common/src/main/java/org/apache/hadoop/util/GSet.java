@@ -21,6 +21,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 
+import java.util.Collection;
+
 /**
  * A {@link GSet} is set,
  * which supports the {@link #get(Object)} operation.
@@ -87,4 +89,13 @@ public interface GSet<K, E extends K> extends Iterable<E> {
   E remove(K key);
 
   void clear();
+
+  /**
+   * Returns a {@link Collection} view of the values contained in this set.
+   * The collection is backed by the set, so changes to the set are
+   * reflected in the collection, and vice-versa.
+   *
+   * @return the collection of values.
+   */
+  Collection<E> values();
 }
